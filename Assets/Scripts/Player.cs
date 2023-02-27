@@ -44,6 +44,7 @@ public class Player : MonoBehaviour
     //private int _coinsCollected;
     private int _lives = 3;
     private int _form = 0;
+    private bool _iframe = false;
 
 
     // Start is called before the first frame update
@@ -149,7 +150,7 @@ public class Player : MonoBehaviour
             _canFire = Time.time + _fireRate;
 
             // The Player is in the Fire form
-            Instantiate(_fireboltPrefab, transform.position + new Vector3(0, -0.03f, 0.01f), Quaternion.identity);
+            Instantiate(_fireboltPrefab, transform.position + new Vector3(0, -0.03f, 0f), Quaternion.identity);
         }
         else if (_form == 2 && _controller.isGrounded)
         {
@@ -179,11 +180,11 @@ public class Player : MonoBehaviour
             // The Player is in the Water form
             if (_renderer.flipX)
             {
-                Instantiate(_wavePrefab, transform.position + new Vector3(-0.14f, 0.04f, 0.01f), Quaternion.identity);
+                Instantiate(_wavePrefab, transform.position + new Vector3(-0.14f, 0.04f, 0f), Quaternion.identity);
             }
             else
             {
-                Instantiate(_wavePrefab, transform.position + new Vector3(0.14f, 0.04f, 0.01f), Quaternion.identity);
+                Instantiate(_wavePrefab, transform.position + new Vector3(0.14f, 0.04f, 0f), Quaternion.identity);
             }
         }
     }
@@ -202,12 +203,26 @@ public class Player : MonoBehaviour
 
     public void Damage()
     {
-        _lives--;
-        _uiManager.UpdateLivesDisplay(_lives);
-
-        if (_lives < 1)
+        if (!_iframe)
         {
-            SceneManager.LoadScene(0);
+            _lives--;
+            _uiManager.UpdateLivesDisplay(_lives);
+
+            _iframe = true;
+            StartCoroutine(IFrameRoutine());
+
+            if (_lives < 1)
+            {
+                _iframe = false;
+                SceneManager.LoadScene(0);
+            }
         }
+    }
+
+    // After the enemy is hit, make it invulnerable for a short amount of time.
+    IEnumerator IFrameRoutine()
+    {
+        yield return new WaitForSeconds(1.0f);
+        _iframe = false;
     }
 }

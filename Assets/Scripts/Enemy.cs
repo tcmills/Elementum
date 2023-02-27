@@ -14,6 +14,12 @@ public class Enemy : MonoBehaviour
     [SerializeField]
     private float _travelTime = 4.0f;
 
+    [SerializeField]
+    private int _form;
+
+    private int _health = 10;
+    private bool _iframe = false;
+
 
     // Start is called before the first frame update
     void Start()
@@ -33,6 +39,11 @@ public class Enemy : MonoBehaviour
     {
         // Move the Enemy based on its speed
         transform.Translate(Vector3.right * _speed * Time.deltaTime);
+
+        if (_health < 1)
+        {
+            Destroy(this.gameObject);
+        }
     }
 
     // While the enemy is allowed to move, it will chenge directions every "_travelTime" seconds
@@ -46,7 +57,7 @@ public class Enemy : MonoBehaviour
         
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerStay(Collider other)
     {
         if (other.tag == "Player")
         {
@@ -55,33 +66,56 @@ public class Enemy : MonoBehaviour
             {
                 _player.Damage();
             }
-
-            _moving = false;
-            _speed = 0;
-
-            Destroy(this.gameObject);
         }
-        else if (other.tag == "Firebolt")
+        
+        if (!_iframe)
         {
-            _moving = false;
-            _speed = 0;
+            if (other.tag == "Firebolt")
+            {
+                Destroy(other.gameObject);
 
-            Destroy(other.gameObject);
-            Destroy(this.gameObject);
-        }
-        else if (other.tag == "LightningBolt")
-        {
-            _moving = false;
-            _speed = 0;
+                if (_form == 0)
+                {
+                    _health -= 2;
+                }
+                else
+                {
+                    _health -= 4;
+                }
+            }
+            else if (other.tag == "LightningBolt")
+            {
+                if (_form == 1)
+                {
+                    _health -= 2;
+                }
+                else
+                {
+                    _health -= 4;
+                }
+            }
+            else if (other.tag == "Wave")
+            {
+                if (_form == 2)
+                {
+                    _health -= 2;
+                }
+                else
+                {
+                    _health -= 4;
+                }
+            }
 
-            Destroy(this.gameObject);
+            _iframe = true;
+            StartCoroutine(IFrameRoutine());
         }
-        else if (other.tag == "Wave")
-        {
-            _moving = false;
-            _speed = 0;
 
-            Destroy(this.gameObject);
-        }
+    }
+
+    // After the enemy is hit, make it invulnerable for a short amount of time.
+    IEnumerator IFrameRoutine()
+    {
+        yield return new WaitForSeconds(0.5f);
+        _iframe = false;
     }
 }
